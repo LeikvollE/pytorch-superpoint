@@ -112,7 +112,7 @@ class SyntheticDataset_gaussian(data.Dataset):
         # temp_dir = Path(os.environ['TMPDIR'], primitive)
         temp_dir = Path(TMPDIR, primitive)
 
-        tf.logging.info("Generating tarfile for primitive {}.".format(primitive))
+        tf.compat.v1.logging.info("Generating tarfile for primitive {}.".format(primitive))
         synthetic_dataset.set_random_state(
             np.random.RandomState(config["generation"]["random_seed"])
         )
