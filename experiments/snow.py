@@ -33,12 +33,11 @@ def make_gradient_v2(width, height, h, k, a, b, theta):
 
     return np.clip(1.0 - weights, 0, 1)
 
-def draw_snow(a, b, theta, inner_scale, save_intermediate=False):
+def draw_snow(a, b, theta):
     # Calculate the image size needed to draw this and center the ellipse
     _, (h, k) = ellipse_bbox(0, 0, a, b, theta)  # Ellipse center
-    h += 2  # Add small margin
-    k += 2  # Add small margin
-    width, height = (h * 2 + 1, k * 2 + 1)  # Canvas size
+
+    width, height = (h * 2, k * 2)  # Canvas size
 
     # Generate the gradient and scale it to 8bit grayscale range
     intensity = np.uint8(make_gradient_v2(width, height, h, k, a, b, theta) * 255)
@@ -59,10 +58,10 @@ def add_snow(img):
 
     snows = 50
     for i in range(snows):
-        a, b = (random.randint(2, 6), random.randint(2, 6))  # Semi-major and semi-minor axis
+        a, b = (random.randint(2, 4), random.randint(2, 4))  # Semi-major and semi-minor axis
         theta = math.radians(90.0 * random.random())  # Ellipse rotation (radians)
 
-        snow = draw_snow(a, b, theta, True)
+        snow = draw_snow(a, b, theta)
         # displaying the orignal image
         cv2.imshow('Original', snow)
         # displaying the vignette filter image
