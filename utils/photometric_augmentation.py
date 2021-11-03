@@ -2,6 +2,9 @@
 # not used in our pipeline
 # need to verify if synthetic generation uses it.
 """
+import random
+
+import cv2
 import cv2 as cv
 import numpy as np
 import tensorflow as tf
@@ -15,6 +18,32 @@ augmentations = [
         'additive_shade',
         'motion_blur'
 ]
+
+def vignette(image):
+    rows, cols = image.shape[:2]
+
+    # generating vignette mask using Gaussian resultant_kernels
+    sigma_X = cols / (1.5 + random.random() * 1.5)
+    sigma_Y = rows / (1.5 + random.random() * 1.5)
+
+    scale = 1.6
+    X_resultant_kernel = cv2.getGaussianKernel(int(scale * cols), sigma_X)
+    Y_resultant_kernel = cv2.getGaussianKernel(int(scale * rows), sigma_Y)
+
+    start_X = random.randint(0, int(scale * cols) - cols)
+    start_Y = random.randint(0, int(scale * rows) - rows)
+
+    X_resultant_kernel = X_resultant_kernel[start_X:start_X + cols]
+    Y_resultant_kernel = Y_resultant_kernel[start_Y:start_Y + rows]
+
+    # generating resultant_kernel matrix
+    resultant_kernel = Y_resultant_kernel * X_resultant_kernel.T
+
+    # creating mask and normalising by using np.linalg function
+
+    mask = resultant_kernel * (random.random() * 0.3 + 0.7) / np.max(resultant_kernel)
+    image[:, :, 0] = image[:, :, 0] * mask
+    return image
 
 
 def additive_gaussian_noise(image, stddev_range=[5, 95]):

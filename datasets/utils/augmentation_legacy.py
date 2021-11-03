@@ -1,7 +1,6 @@
 """ Used to generate synthetic shapes
 
 """
-
 import cv2 as cv
 import numpy as np
 import math
@@ -19,13 +18,11 @@ augmentations = [
         'elastic_transform',
         'random_crop',
         'add_shade',
-        'motion_blur'
+        'motion_blur',
 ]
-
 
 def dummy(image, keypoints):
     return image, keypoints
-
 
 def keep_points_inside(points, size):
     """ Keep only the points whose coordinates are inside the dimensions of
