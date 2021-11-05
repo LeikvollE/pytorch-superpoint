@@ -100,8 +100,6 @@ def vignette(image):
 
     mask = resultant_kernel * (random.random() * 0.3 + 0.7) / np.max(resultant_kernel)
     image[:, :, 0] = image[:, :, 0] * mask
-    cv2.imshow('VIGNETTE', image)
-    cv2.waitKey(0)
     return image
 
 
