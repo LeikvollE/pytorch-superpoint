@@ -52,7 +52,7 @@ def dataLoader(config, dataset='syn', warp_input=False, train=True, val=True):
     logging.info(f"workers_train: {workers_train}, workers_val: {workers_val}")
     data_transforms = {
         'train': transforms.Compose([
-
+            augmentations.Snow(),
             augmentations.Vignette(),
             transforms.ToTensor(),
         ]),

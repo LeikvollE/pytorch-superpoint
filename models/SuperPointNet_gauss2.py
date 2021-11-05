@@ -50,17 +50,17 @@ class SuperPointNet_gauss2(torch.nn.Module):
           desc: Output descriptor pytorch tensor shaped N x 256 x H/8 x W/8.
         """
         # Let's stick to this version: first BN, then relu
-        x1 = self.inc(x)
-        x2 = self.down1(x1)
-        x3 = self.down2(x2)
-        x4 = self.down3(x3)
+        x4 = self.down3(self.down2(self.down1(self.inc(x))))
 
         # Detector Head.
         cPa = self.relu(self.bnPa(self.convPa(x4)))
         semi = self.bnPb(self.convPb(cPa))
+
+        del cPa
         # Descriptor Head.
         cDa = self.relu(self.bnDa(self.convDa(x4)))
         desc = self.bnDb(self.convDb(cDa))
+        del cDa
 
         dn = torch.norm(desc, p=2, dim=1) # Compute the norm.
         desc = desc.div(torch.unsqueeze(dn, 1)) # Divide by norm to normalize.

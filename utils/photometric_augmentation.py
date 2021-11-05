@@ -2,6 +2,7 @@
 # not used in our pipeline
 # need to verify if synthetic generation uses it.
 """
+import math
 import random
 
 import cv2
@@ -18,6 +19,62 @@ augmentations = [
         'additive_shade',
         'motion_blur'
 ]
+
+def ellipse_bbox(h, k, a, b, theta):
+    ux = a * math.cos(theta)
+    uy = a * math.sin(theta)
+    vx = b * math.cos(theta + math.pi / 2)
+    vy = b * math.sin(theta + math.pi / 2)
+    box_halfwidth = np.ceil(math.sqrt(ux ** 2 + vx ** 2))
+    box_halfheight = np.ceil(math.sqrt(uy ** 2 + vy ** 2))
+    return (int(h + box_halfwidth), int(k + box_halfheight))
+
+
+# Rotated elliptical gradient - faster, vectorized numpy approach
+def make_gradient_v2(width, height, h, k, a, b, theta):
+    # Precalculate constants
+    st, ct = math.sin(theta), math.cos(theta)
+    aa, bb = a ** 2, b ** 2
+
+    # Generate (x,y) coordinate arrays
+    y, x = np.mgrid[-k:height - k, -h:width - h]
+    # Calculate the weight for each pixel
+    weights = (((x * ct + y * st) ** 2) / aa) + (((x * st - y * ct) ** 2) / bb)
+    min = np.min(weights)
+
+    return np.clip((1.0 - weights)/(1 - min), 0, 1)
+
+def draw_snow(a, b, theta):
+    # Calculate the image size needed to draw this and center the ellipse
+    (h, k) = ellipse_bbox(0, 0, a, b, theta)  # Ellipse center
+    width, height = (h * 2, k * 2)  # Canvas size
+
+    # Generate the gradient and scale it to 8bit grayscale range
+    intensity = make_gradient_v2(width, height, h, k, a, b, theta)
+    return intensity * (0.15 + random.random() * 0.85)
+
+def add_snow(image, pixels_per_snow_max=900, pixels_per_snow_min=700, max_size=3, min_size=1):
+
+    # Extracting the height and width of an image
+    rows, cols = image.shape[:2]
+
+    area = rows * cols
+    snows = area // random.randint(pixels_per_snow_min, pixels_per_snow_max)
+    for _ in range(snows):
+        a, b = (random.randint(min_size, max_size), random.randint(min_size, max_size))  # Semi-major and semi-minor axis
+        theta = math.radians(90.0 * random.random())  # Ellipse rotation (radians)
+
+        snow = draw_snow(a, b, theta)
+
+        # displaying the orignal image
+        x, y = random.randint(0, cols - snow.shape[1]), random.randint(0, rows - snow.shape[0])
+        w = np.ones_like(snow)
+
+        weighted_square = image[y:y + snow.shape[0], x:x + snow.shape[1], 0] * (w - snow)
+        image[y:y + snow.shape[0], x:x + snow.shape[1], 0] = weighted_square + snow
+
+    return image
+
 
 def vignette(image):
     rows, cols = image.shape[:2]
@@ -43,6 +100,8 @@ def vignette(image):
 
     mask = resultant_kernel * (random.random() * 0.3 + 0.7) / np.max(resultant_kernel)
     image[:, :, 0] = image[:, :, 0] * mask
+    cv2.imshow('VIGNETTE', image)
+    cv2.waitKey(0)
     return image
 
 
